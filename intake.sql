@@ -1,0 +1,150 @@
+create schema staging;
+GO
+
+CREATE TABLE staging.raw_flights (
+
+    Year VARCHAR(256), 
+    Quarter VARCHAR(256), 
+    Month VARCHAR(256), 
+    DayofMonth VARCHAR(256), 
+    DayOfWeek VARCHAR(256), 
+    FlightDate VARCHAR(256), 
+    Reporting_Airline VARCHAR(256), 
+    DOT_ID_Reporting_Airline VARCHAR(256), 
+    IATA_CODE_Reporting_Airline VARCHAR(256), 
+    Tail_Number VARCHAR(256), 
+    Flight_Number_Reporting_Airline VARCHAR(256), 
+    OriginAirportID VARCHAR(256), 
+    OriginAirportSeqID VARCHAR(256), 
+    OriginCityMarketID VARCHAR(256), 
+    Origin VARCHAR(256), 
+    OriginCityName VARCHAR(256), 
+    OriginState VARCHAR(256), 
+    OriginStateFips VARCHAR(256), 
+    OriginStateName VARCHAR(256), 
+    OriginWac VARCHAR(256), 
+    DestAirportID VARCHAR(256), 
+    DestAirportSeqID VARCHAR(256), 
+    DestCityMarketID VARCHAR(256), 
+    Dest VARCHAR(256), 
+    DestCityName VARCHAR(256), 
+    DestState VARCHAR(256), 
+    DestStateFips VARCHAR(256), 
+    DestStateName VARCHAR(256), 
+    DestWac VARCHAR(256), 
+    CRSDepTime VARCHAR(256), 
+    DepTime VARCHAR(256), 
+    DepDelay VARCHAR(256), 
+    DepDelayMinutes VARCHAR(256), 
+    DepDel15 VARCHAR(256), 
+    DepartureDelayGroups VARCHAR(256), 
+    DepTimeBlk VARCHAR(256), 
+    TaxiOut VARCHAR(256), 
+    WheelsOff VARCHAR(256), 
+    WheelsOn VARCHAR(256), 
+    TaxiIn VARCHAR(256), 
+    CRSArrTime VARCHAR(256), 
+    ArrTime VARCHAR(256), 
+    ArrDelay VARCHAR(256), 
+    ArrDelayMinutes VARCHAR(256), 
+    ArrDel15 VARCHAR(256), 
+    ArrivalDelayGroups VARCHAR(256), 
+    ArrTimeBlk VARCHAR(256), 
+    Cancelled VARCHAR(256), 
+    CancellationCode VARCHAR(256), 
+    Diverted VARCHAR(256), 
+    CRSElapsedTime VARCHAR(256), 
+    ActualElapsedTime VARCHAR(256), 
+    AirTime VARCHAR(256), 
+    Flights VARCHAR(256), 
+    Distance VARCHAR(256), 
+    DistanceGroup VARCHAR(256), 
+    CarrierDelay VARCHAR(256), 
+    WeatherDelay VARCHAR(256), 
+    NASDelay VARCHAR(256), 
+    SecurityDelay VARCHAR(256), 
+    LateAircraftDelay VARCHAR(256), 
+    FirstDepTime VARCHAR(256), 
+    TotalAddGTime VARCHAR(256), 
+    LongestAddGTime VARCHAR(256), 
+    DivAirportLandings VARCHAR(256), 
+    DivReachedDest VARCHAR(256), 
+    DivActualElapsedTime VARCHAR(256), 
+    DivArrDelay VARCHAR(256), 
+    DivDistance VARCHAR(256), 
+    Div1Airport VARCHAR(256), 
+    Div1AirportID VARCHAR(256), 
+    Div1AirportSeqID VARCHAR(256), 
+    Div1WheelsOn VARCHAR(256), 
+    Div1TotalGTime VARCHAR(256), 
+    Div1LongestGTime VARCHAR(256), 
+    Div1WheelsOff VARCHAR(256), 
+    Div1TailNum VARCHAR(256), 
+    Div2Airport VARCHAR(256), 
+    Div2AirportID VARCHAR(256), 
+    Div2AirportSeqID VARCHAR(256), 
+    Div2WheelsOn VARCHAR(256), 
+    Div2TotalGTime VARCHAR(256), 
+    Div2LongestGTime VARCHAR(256), 
+    Div2WheelsOff VARCHAR(256), 
+    Div2TailNum VARCHAR(256), 
+    Div3Airport VARCHAR(256), 
+    Div3AirportID VARCHAR(256), 
+    Div3AirportSeqID VARCHAR(256), 
+    Div3WheelsOn VARCHAR(256), 
+    Div3TotalGTime VARCHAR(256), 
+    Div3LongestGTime VARCHAR(256), 
+    Div3WheelsOff VARCHAR(256), 
+    Div3TailNum VARCHAR(256), 
+    Div4Airport VARCHAR(256), 
+    Div4AirportID VARCHAR(256), 
+    Div4AirportSeqID VARCHAR(256), 
+    Div4WheelsOn VARCHAR(256), 
+    Div4TotalGTime VARCHAR(256), 
+    Div4LongestGTime VARCHAR(256), 
+    Div4WheelsOff VARCHAR(256), 
+    Div4TailNum VARCHAR(256), 
+    Div5Airport VARCHAR(256), 
+    Div5AirportID VARCHAR(256), 
+    Div5AirportSeqID VARCHAR(256), 
+    Div5WheelsOn VARCHAR(256), 
+    Div5TotalGTime VARCHAR(256), 
+    Div5LongestGTime VARCHAR(256), 
+    Div5WheelsOff VARCHAR(256), 
+    Div5TailNum VARCHAR(256)
+);
+GO
+
+ALTER TABLE staging.raw_flights ADD Filler VARCHAR(10);
+GO
+
+BULK INSERT staging.raw_flights
+FROM 'flights_2002_3.csv'
+WITH (
+    DATA_SOURCE = 'bts_blob',
+    FORMAT = 'CSV',
+    FIELDQUOTE = '"',
+    FIRSTROW = 2
+);
+
+CREATE TABLE staging.probe (line VARCHAR(MAX));
+GO
+
+BULK INSERT staging.probe
+FROM 'flights_2002_3.csv'
+WITH (DATA_SOURCE = 'bts_blob', FIELDTERMINATOR = '|', FIRSTROW = 1);
+
+TRUNCATE TABLE staging.raw_flights;
+GO
+
+BULK INSERT staging.raw_flights
+FROM 'flights_2002_3.csv'
+WITH (
+    DATA_SOURCE = 'bts_blob',
+    FORMAT = 'CSV',
+    FIELDQUOTE = '"',
+    FIRSTROW = 2,
+    ROWTERMINATOR = '0x0a'
+);
+
+SELECT COUNT(*) FROM staging.raw_flights;

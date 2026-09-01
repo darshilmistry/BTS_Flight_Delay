@@ -1,0 +1,12 @@
+CREATE MASTER KEY ENCRYPTION BY PASSWORD = '...';
+
+CREATE DATABASE SCOPED CREDENTIAL bts_cred
+WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
+     SECRET = '...';
+
+CREATE EXTERNAL DATA SOURCE bts_blob
+WITH (
+    TYPE = BLOB_STORAGE,
+    LOCATION = 'https://btsflightdelaycsvs.blob.core.windows.net/raw',
+    CREDENTIAL = bts_cred
+);
