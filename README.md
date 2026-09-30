@@ -12,7 +12,7 @@ An end-to-end data warehouse built on Azure from the U.S. Bureau of Transportati
 |---|---|
 | **README.md** (this file) | Overview, data model, design decisions |
 | [Azure](Azure/AZURE.md) | Azure services, pipeline orchestration, operations |
-| [POWERBI](PowerBi/POWERBI.md) | Reporting layer, measures, future work |
+| [POWERBI](PowerBI/POWERBI.md) | Reporting layer, measures, future work |
 
 > **Status:** Warehouse and pipeline fully built. The end-to-end proof run (load a month, rerun it, confirm identical counts) is pending re-enablement of the Azure subscription.
 
