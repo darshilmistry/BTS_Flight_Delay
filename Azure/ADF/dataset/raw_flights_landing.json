@@ -1,0 +1,461 @@
+{
+    "name": "raw_flights_landing",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "bts_flight_delay_sql_server",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "SqlServerTable",
+        "schema": [
+            {
+                "name": "Prop_0",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_1",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_2",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_3",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_4",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_5",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_6",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_7",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_8",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_9",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_10",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_11",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_12",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_13",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_14",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_15",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_16",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_17",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_18",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_19",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_20",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_21",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_22",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_23",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_24",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_25",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_26",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_27",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_28",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_29",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_30",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_31",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_32",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_33",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_34",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_35",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_36",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_37",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_38",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_39",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_40",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_41",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_42",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_43",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_44",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_45",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_46",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_47",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_48",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_49",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_50",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_51",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_52",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_53",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_54",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_55",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_56",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_57",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_58",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_59",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_60",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_61",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_62",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_63",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_64",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_65",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_66",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_67",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_68",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_69",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_70",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_71",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_72",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_73",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_74",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_75",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_76",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_77",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_78",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_79",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_80",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_81",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_82",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_83",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_84",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_85",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_86",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_87",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_88",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_89",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_90",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_91",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_92",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_93",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_94",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_95",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_96",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_97",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_98",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_99",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_100",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_101",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_102",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_103",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_104",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_105",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_106",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_107",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_108",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_109",
+                "type": "varchar"
+            },
+            {
+                "name": "Prop_110",
+                "type": "varchar"
+            }
+        ],
+        "typeProperties": {
+            "schema": "staging",
+            "table": "raw_flights_landing"
+        }
+    }
+}

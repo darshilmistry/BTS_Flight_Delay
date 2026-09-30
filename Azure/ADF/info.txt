@@ -1,0 +1,6 @@
+selected resource name:		Main
+selected resource type:		pipeline
+factory name:			monthly-automation
+factory location:		westus3
+subscription id:		cca72fb9-3bd8-4615-b8d3-140041d1fc67
+time of download (UTC):		Wed, 30 Sep 2026 01:07:48 GMT

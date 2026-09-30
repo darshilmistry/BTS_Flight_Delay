@@ -1,0 +1,35 @@
+{
+    "name": "bts_zip_repo",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "zip_repo_http",
+            "type": "LinkedServiceReference"
+        },
+        "parameters": {
+            "year": {
+                "type": "string",
+                "defaultValue": "2002"
+            },
+            "month": {
+                "type": "string",
+                "defaultValue": "4"
+            }
+        },
+        "annotations": [],
+        "type": "Binary",
+        "typeProperties": {
+            "location": {
+                "type": "HttpServerLocation",
+                "relativeUrl": {
+                    "value": "On_Time_Reporting_Carrier_On_Time_Performance_1987_present_@{dataset().year}_@{dataset().month}.zip",
+                    "type": "Expression"
+                }
+            },
+            "compression": {
+                "type": "ZipDeflate",
+                "level": "Optimal"
+            }
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

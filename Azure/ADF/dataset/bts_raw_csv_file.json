@@ -1,0 +1,480 @@
+{
+    "name": "bts_raw_csv_file",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "AzureBlobStorage1",
+            "type": "LinkedServiceReference"
+        },
+        "parameters": {
+            "year": {
+                "type": "string"
+            },
+            "month": {
+                "type": "string"
+            }
+        },
+        "annotations": [],
+        "type": "DelimitedText",
+        "typeProperties": {
+            "location": {
+                "type": "AzureBlobStorageLocation",
+                "fileName": {
+                    "value": "On_Time_Reporting_Carrier_On_Time_Performance_(1987_present)_@{dataset().year}_@{dataset().month}.csv",
+                    "type": "Expression"
+                },
+                "folderPath": {
+                    "value": "extracted-zip/On_Time_Reporting_Carrier_On_Time_Performance_1987_present_@{dataset().year}_@{dataset().month}.zip",
+                    "type": "Expression"
+                },
+                "container": "bts-flight-data"
+            },
+            "columnDelimiter": ",",
+            "escapeChar": "\\",
+            "firstRowAsHeader": false,
+            "quoteChar": "\""
+        },
+        "schema": [
+            {
+                "name": "Year",
+                "type": "String"
+            },
+            {
+                "name": "Quarter",
+                "type": "String"
+            },
+            {
+                "name": "Month",
+                "type": "String"
+            },
+            {
+                "name": "DayofMonth",
+                "type": "String"
+            },
+            {
+                "name": "DayOfWeek",
+                "type": "String"
+            },
+            {
+                "name": "FlightDate",
+                "type": "String"
+            },
+            {
+                "name": "Reporting_Airline",
+                "type": "String"
+            },
+            {
+                "name": "DOT_ID_Reporting_Airline",
+                "type": "String"
+            },
+            {
+                "name": "IATA_CODE_Reporting_Airline",
+                "type": "String"
+            },
+            {
+                "name": "Tail_Number",
+                "type": "String"
+            },
+            {
+                "name": "Flight_Number_Reporting_Airline",
+                "type": "String"
+            },
+            {
+                "name": "OriginAirportID",
+                "type": "String"
+            },
+            {
+                "name": "OriginAirportSeqID",
+                "type": "String"
+            },
+            {
+                "name": "OriginCityMarketID",
+                "type": "String"
+            },
+            {
+                "name": "Origin",
+                "type": "String"
+            },
+            {
+                "name": "OriginCityName",
+                "type": "String"
+            },
+            {
+                "name": "OriginState",
+                "type": "String"
+            },
+            {
+                "name": "OriginStateFips",
+                "type": "String"
+            },
+            {
+                "name": "OriginStateName",
+                "type": "String"
+            },
+            {
+                "name": "OriginWac",
+                "type": "String"
+            },
+            {
+                "name": "DestAirportID",
+                "type": "String"
+            },
+            {
+                "name": "DestAirportSeqID",
+                "type": "String"
+            },
+            {
+                "name": "DestCityMarketID",
+                "type": "String"
+            },
+            {
+                "name": "Dest",
+                "type": "String"
+            },
+            {
+                "name": "DestCityName",
+                "type": "String"
+            },
+            {
+                "name": "DestState",
+                "type": "String"
+            },
+            {
+                "name": "DestStateFips",
+                "type": "String"
+            },
+            {
+                "name": "DestStateName",
+                "type": "String"
+            },
+            {
+                "name": "DestWac",
+                "type": "String"
+            },
+            {
+                "name": "CRSDepTime",
+                "type": "String"
+            },
+            {
+                "name": "DepTime",
+                "type": "String"
+            },
+            {
+                "name": "DepDelay",
+                "type": "String"
+            },
+            {
+                "name": "DepDelayMinutes",
+                "type": "String"
+            },
+            {
+                "name": "DepDel15",
+                "type": "String"
+            },
+            {
+                "name": "DepartureDelayGroups",
+                "type": "String"
+            },
+            {
+                "name": "DepTimeBlk",
+                "type": "String"
+            },
+            {
+                "name": "TaxiOut",
+                "type": "String"
+            },
+            {
+                "name": "WheelsOff",
+                "type": "String"
+            },
+            {
+                "name": "WheelsOn",
+                "type": "String"
+            },
+            {
+                "name": "TaxiIn",
+                "type": "String"
+            },
+            {
+                "name": "CRSArrTime",
+                "type": "String"
+            },
+            {
+                "name": "ArrTime",
+                "type": "String"
+            },
+            {
+                "name": "ArrDelay",
+                "type": "String"
+            },
+            {
+                "name": "ArrDelayMinutes",
+                "type": "String"
+            },
+            {
+                "name": "ArrDel15",
+                "type": "String"
+            },
+            {
+                "name": "ArrivalDelayGroups",
+                "type": "String"
+            },
+            {
+                "name": "ArrTimeBlk",
+                "type": "String"
+            },
+            {
+                "name": "Cancelled",
+                "type": "String"
+            },
+            {
+                "name": "CancellationCode",
+                "type": "String"
+            },
+            {
+                "name": "Diverted",
+                "type": "String"
+            },
+            {
+                "name": "CRSElapsedTime",
+                "type": "String"
+            },
+            {
+                "name": "ActualElapsedTime",
+                "type": "String"
+            },
+            {
+                "name": "AirTime",
+                "type": "String"
+            },
+            {
+                "name": "Flights",
+                "type": "String"
+            },
+            {
+                "name": "Distance",
+                "type": "String"
+            },
+            {
+                "name": "DistanceGroup",
+                "type": "String"
+            },
+            {
+                "name": "CarrierDelay",
+                "type": "String"
+            },
+            {
+                "name": "WeatherDelay",
+                "type": "String"
+            },
+            {
+                "name": "NASDelay",
+                "type": "String"
+            },
+            {
+                "name": "SecurityDelay",
+                "type": "String"
+            },
+            {
+                "name": "LateAircraftDelay",
+                "type": "String"
+            },
+            {
+                "name": "FirstDepTime",
+                "type": "String"
+            },
+            {
+                "name": "TotalAddGTime",
+                "type": "String"
+            },
+            {
+                "name": "LongestAddGTime",
+                "type": "String"
+            },
+            {
+                "name": "DivAirportLandings",
+                "type": "String"
+            },
+            {
+                "name": "DivReachedDest",
+                "type": "String"
+            },
+            {
+                "name": "DivActualElapsedTime",
+                "type": "String"
+            },
+            {
+                "name": "DivArrDelay",
+                "type": "String"
+            },
+            {
+                "name": "DivDistance",
+                "type": "String"
+            },
+            {
+                "name": "Div1Airport",
+                "type": "String"
+            },
+            {
+                "name": "Div1AirportID",
+                "type": "String"
+            },
+            {
+                "name": "Div1AirportSeqID",
+                "type": "String"
+            },
+            {
+                "name": "Div1WheelsOn",
+                "type": "String"
+            },
+            {
+                "name": "Div1TotalGTime",
+                "type": "String"
+            },
+            {
+                "name": "Div1LongestGTime",
+                "type": "String"
+            },
+            {
+                "name": "Div1WheelsOff",
+                "type": "String"
+            },
+            {
+                "name": "Div1TailNum",
+                "type": "String"
+            },
+            {
+                "name": "Div2Airport",
+                "type": "String"
+            },
+            {
+                "name": "Div2AirportID",
+                "type": "String"
+            },
+            {
+                "name": "Div2AirportSeqID",
+                "type": "String"
+            },
+            {
+                "name": "Div2WheelsOn",
+                "type": "String"
+            },
+            {
+                "name": "Div2TotalGTime",
+                "type": "String"
+            },
+            {
+                "name": "Div2LongestGTime",
+                "type": "String"
+            },
+            {
+                "name": "Div2WheelsOff",
+                "type": "String"
+            },
+            {
+                "name": "Div2TailNum",
+                "type": "String"
+            },
+            {
+                "name": "Div3Airport",
+                "type": "String"
+            },
+            {
+                "name": "Div3AirportID",
+                "type": "String"
+            },
+            {
+                "name": "Div3AirportSeqID",
+                "type": "String"
+            },
+            {
+                "name": "Div3WheelsOn",
+                "type": "String"
+            },
+            {
+                "name": "Div3TotalGTime",
+                "type": "String"
+            },
+            {
+                "name": "Div3LongestGTime",
+                "type": "String"
+            },
+            {
+                "name": "Div3WheelsOff",
+                "type": "String"
+            },
+            {
+                "name": "Div3TailNum",
+                "type": "String"
+            },
+            {
+                "name": "Div4Airport",
+                "type": "String"
+            },
+            {
+                "name": "Div4AirportID",
+                "type": "String"
+            },
+            {
+                "name": "Div4AirportSeqID",
+                "type": "String"
+            },
+            {
+                "name": "Div4WheelsOn",
+                "type": "String"
+            },
+            {
+                "name": "Div4TotalGTime",
+                "type": "String"
+            },
+            {
+                "name": "Div4LongestGTime",
+                "type": "String"
+            },
+            {
+                "name": "Div4WheelsOff",
+                "type": "String"
+            },
+            {
+                "name": "Div4TailNum",
+                "type": "String"
+            },
+            {
+                "name": "Div5Airport",
+                "type": "String"
+            },
+            {
+                "name": "Div5AirportID",
+                "type": "String"
+            },
+            {
+                "name": "Div5AirportSeqID",
+                "type": "String"
+            },
+            {
+                "name": "Div5WheelsOn",
+                "type": "String"
+            },
+            {
+                "name": "Div5TotalGTime",
+                "type": "String"
+            },
+            {
+                "name": "Div5LongestGTime",
+                "type": "String"
+            },
+            {
+                "name": "Div5WheelsOff",
+                "type": "String"
+            },
+            {
+                "name": "Div5TailNum",
+                "type": "String"
+            },
+            {
+                "name": "filler",
+                "type": "String"
+            }
+        ]
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

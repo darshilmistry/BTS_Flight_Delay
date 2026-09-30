@@ -1,0 +1,452 @@
+{
+    "name": "Main",
+    "properties": {
+        "activities": [
+            {
+                "name": "Fetch_Zip",
+                "type": "Copy",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "BinarySource",
+                        "storeSettings": {
+                            "type": "HttpReadSettings",
+                            "requestMethod": "GET",
+                            "requestTimeout": ""
+                        },
+                        "formatSettings": {
+                            "type": "BinaryReadSettings",
+                            "compressionProperties": {
+                                "type": "ZipDeflateReadSettings"
+                            }
+                        }
+                    },
+                    "sink": {
+                        "type": "BinarySink",
+                        "storeSettings": {
+                            "type": "AzureBlobStorageWriteSettings",
+                            "copyBehavior": "PreserveHierarchy"
+                        }
+                    },
+                    "enableStaging": false
+                },
+                "inputs": [
+                    {
+                        "referenceName": "bts_zip_repo",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "year": {
+                                "value": "@pipeline().parameters.year",
+                                "type": "Expression"
+                            },
+                            "month": {
+                                "value": "@pipeline().parameters.month",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "zip_container",
+                        "type": "DatasetReference"
+                    }
+                ]
+            },
+            {
+                "name": "extract_zip",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "Fetch_Zip",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "BinarySource",
+                        "storeSettings": {
+                            "type": "AzureBlobStorageReadSettings",
+                            "recursive": true
+                        },
+                        "formatSettings": {
+                            "type": "BinaryReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "BinarySink",
+                        "storeSettings": {
+                            "type": "AzureBlobStorageWriteSettings",
+                            "copyBehavior": "PreserveHierarchy"
+                        }
+                    },
+                    "enableStaging": false
+                },
+                "inputs": [
+                    {
+                        "referenceName": "zip_container",
+                        "type": "DatasetReference"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "bts_raw_csv_repo",
+                        "type": "DatasetReference"
+                    }
+                ]
+            },
+            {
+                "name": "move_to_sql",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "Setup Objects",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "DelimitedTextSource",
+                        "storeSettings": {
+                            "type": "AzureBlobStorageReadSettings",
+                            "recursive": true,
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "DelimitedTextReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "SqlServerSink",
+                        "preCopyScript": "TRUNCATE TABLE staging.raw_flights_landing;",
+                        "writeBehavior": "insert",
+                        "sqlWriterUseTableLock": false
+                    },
+                    "enableStaging": false,
+                    "translator": {
+                        "type": "TabularTranslator",
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                            "allowDataTruncation": true,
+                            "treatBooleanAsNumber": false
+                        }
+                    }
+                },
+                "inputs": [
+                    {
+                        "referenceName": "bts_raw_csv_file",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "year": {
+                                "value": "@pipeline().parameters.year",
+                                "type": "Expression"
+                            },
+                            "month": {
+                                "value": "@pipeline().parameters.month",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "raw_flights_landing",
+                        "type": "DatasetReference"
+                    }
+                ]
+            },
+            {
+                "name": "Setup Objects",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "extract_zip",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[dbo].[usp_setup_objects]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "bts_flight_delay_sql_server",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "Dim_Dates",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "move_to_sql",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[staging].[usp_load_dim_date]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "bts_flight_delay_sql_server",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "Dim_Carriers",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "move_to_sql",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[staging].[usp_load_dim_carrier]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "bts_flight_delay_sql_server",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "DIM_AIRFRAMES_IDS_ONLY",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "move_to_sql",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[staging].[usp_load_dim_airframe_ids_only]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "bts_flight_delay_sql_server",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "DIM_AIRPORT",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "move_to_sql",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[staging].[usp_load_dim_airport]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "bts_flight_delay_sql_server",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "FCT_FLIGHTS",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "Dim_Dates",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    },
+                    {
+                        "activity": "Dim_Carriers",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    },
+                    {
+                        "activity": "DIM_AIRFRAMES_IDS_ONLY",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    },
+                    {
+                        "activity": "DIM_AIRPORT",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[staging].[usp_load_fact_flight]",
+                    "storedProcedureParameters": {
+                        "Force": {
+                            "value": "false",
+                            "type": "Boolean"
+                        },
+                        "Year": {
+                            "value": "@pipeline().parameters.year",
+                            "type": "String"
+                        },
+                        "Month": {
+                            "value": {
+                                "value": "@pipeline().parameters.month",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        }
+                    }
+                },
+                "linkedServiceName": {
+                    "referenceName": "bts_flight_delay_sql_server",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "Post_FCT_Airframes",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "FCT_FLIGHTS",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[staging].[usp_update_airframe_stats]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "bts_flight_delay_sql_server",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "Post_FCT_Carriers",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "FCT_FLIGHTS",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[staging].[usp_update_carrier_stats]"
+                },
+                "linkedServiceName": {
+                    "referenceName": "bts_flight_delay_sql_server",
+                    "type": "LinkedServiceReference"
+                }
+            }
+        ],
+        "parameters": {
+            "year": {
+                "type": "string",
+                "defaultValue": "2000"
+            },
+            "month": {
+                "type": "string",
+                "defaultValue": "1"
+            }
+        },
+        "annotations": [],
+        "lastPublishTime": "2026-09-16T01:31:46Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

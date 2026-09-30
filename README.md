@@ -1,139 +1,183 @@
 <a href="https://github.com/darshilmistry">< Go to profile</a>
 
-# US Flight Delay Data Warehouse
+![PowerBI](./PowerBI/dashboard.png)
 
-> **Status: in progress.** Ingestion and dimensional modelling are underway. Power BI layer not yet built.
+# BTS Flight Delay Data Warehouse
 
-A star-schema warehouse on Azure SQL for two decades of US domestic flight performance data, built to study how delays originate and propagate through an air transport network.
+An end-to-end data warehouse built on Azure from the U.S. Bureau of Transportation Statistics (BTS) Airline On-Time Performance data. Monthly flight records are downloaded, staged, and modelled into a star schema by an orchestrated Azure Data Factory pipeline, then surfaced in a Power BI operational performance dashboard.
 
-Stack: Azure SQL Database · T-SQL · Azure Blob Storage · Azure Data Factory · Power BI
+**Stack:** Azure Data Factory · Azure Blob Storage · Azure SQL Database · T-SQL · Power BI
 
-
-## The question
-
-Roughly 20% of US domestic flights arrive late, and the Bureau of Transportation Statistics attributes every minute of that delay to one of five causes. The interesting part is that the largest single bucket is *late-arriving aircraft* — delay inherited from the same airframe's previous leg. Most delay isn't originated. It's propagated.
-
-This warehouse is built to quantify that, and to answer:
-
-- **Attribution** - which cause dominates, and does that change by carrier, airport, and season?
-- **Shocks** - the dataset contains two structural breaks: September 2001, when the network was grounded, and April 2020, when 41.3% of scheduled flights were cancelled and only 194,390 flights operated against a prior record low of 370,027. How long is the recovery, and does the network return to the same shape?
-- **Carrier reliability over two decades**, across mergers - carrier codes are reused by different airlines over time, which is a modelling problem rather than a footnote.
-- **Airport and route concentration** - do delays cluster in a small set of nodes (ORD, EWR, LGA, SFO), and does congestion at one propagate outward?
-
-## Data source
-
-Bureau of Transportation Statistics — Airline On-Time Performance.
-
-| | |
+| Document | Covers |
 |---|---|
-| Publisher | US DOT / BTS |
-| Format | Zipped CSV, one file per month |
-| Access | Direct download, no registration or API key |
-| Volume | ~500–700k flights/month, ~6–7M/year |
-| History | October 1987 – present |
-| Columns | 109 |
-| Licence | US public domain |
+| **README.md** (this file) | Overview, data model, design decisions |
+| [docs/AZURE.md](docs/AZURE.md) | Azure services, pipeline orchestration, operations |
+| [docs/POWERBI.md](docs/POWERBI.md) | Reporting layer, measures, future work |
 
-**Scope: 2003–present.** The five delay-cause columns don't exist before June 2003, and they carry the central analytical question. Earlier years are optional stretch scope for the 9/11 story.
+> **Status:** Warehouse and pipeline fully built. The end-to-end proof run (load a month, rerun it, confirm identical counts) is pending re-enablement of the Azure subscription.
+
+---
+
+## Why this dataset
+
+BTS On-Time Performance covers every scheduled domestic flight by major U.S. carriers from October 1987 onward, roughly 6–7 million flights a year, published as monthly CSVs with no registration required.
+
+It was chosen for its analytical story:
+
+- **Delay attribution:** five delay-cause columns (carrier, weather, NAS, security, late aircraft) from June 2003 onward.
+- **Structural shocks:** the 2001 and 2020 collapses in flight volume.
+- **Real-world messiness:** schema quirks, sentinel values, carrier codes reused across airline mergers.
+
+Other candidates (Toronto parking tickets, UK open rail data, NYC taxi trips) were considered and rejected: the first lacked a compelling analytical story, the second carried heavy domain-specific parsing overhead, and the third required a Parquet conversion step that BTS's plain CSVs avoid.
+
+---
 
 ## Architecture
 
-```
-BTS monthly ZIPs
-      │
-      ▼
-Azure Blob Storage ──── raw landing zone, one blob per month, immutable
-      │
-      ▼
-Azure Data Factory ──── copy activity, orchestration, scheduling
-      │
-      ▼
-Azure SQL Database
-      ├── staging       all-VARCHAR landing tables, no type coercion on load
-      ├── quarantine    rejected rows retained as JSON + rejection reason
-      └── warehouse     star schema
-      │
-      ▼
-Power BI ─────────────── semantic model, DAX measures, published report
+```mermaid
+flowchart LR
+    A[BTS monthly zip] --> B[(Azure Blob Storage)]
+    B --> C[Staging<br/>landing table + view]
+    C --> D[Dimensions]
+    D --> E[Fact]
+    E --> F[Post-fact stats]
+    F --> G[Power BI]
 ```
 
-Deliberately **not** used: Synapse, Fabric, Databricks, Event Hubs. None is required at this volume and each is a cost sink.
+Everything is orchestrated by a single parameterised ADF pipeline (`Year`, `Month`). Details in [docs/AZURE.md](docs/AZURE.md).
 
+---
 
-## Design decisions
+## Data model
 
-**Staging is all-VARCHAR.** No type coercion happens on load. A malformed timestamp in a 109-column CSV shouldn't fail an entire monthly batch, so typing is deferred to the staging-to-warehouse transform where failures are attributable to a specific row and column.
+A star schema in the `warehouse` schema, with one fact table at flight grain and four dimensions connected by foreign keys.
 
-**Rejected rows are quarantined, not dropped.** Rows that fail validation are written to a quarantine table with the full original row preserved as JSON in `NVARCHAR(MAX)`, alongside the rejection reason. Silently discarding records isn't clean data; it's an unaccounted-for gap that surfaces months later as a reconciliation problem. Quarantined rows can be repaired and replayed.
-
-**Time fields are converted, not cast.** BTS stores local times as bare `HHMM` strings, which `CAST` won't accept. A scalar function `dbo.ToTime` uses `STUFF` to insert the colon and `TRY_CAST` to `TIME(0)`, returning `NULL` rather than erroring on the malformed values that do appear in the source.
-
-**Airport dimension keyed on `AirportSeqID`.** BTS provides both `AirportID` (stable across time) and `AirportSeqID` (changes when an airport's attributes change, preserving point-in-time truth). SeqID gives historically accurate airport attributes per flight; the tradeoff is that SeqID fragments across years, so multi-year joins on this key need care. Documented here because it's the single most consequential key choice in the model.
-
-
-## Load engineering notes
-
-Getting the first month in took more debugging than expected. Recorded here because these are the failure modes anyone loading BTS data will hit:
-
-| Symptom | Cause | Fix |
-|---|---|---|
-| Load fails on last row | Trailing `rows selected` artifact line — file was a query export, not a direct BTS download | Re-download from source |
-| Every row lands in one column | CRLF vs LF mismatch | `ROWTERMINATOR = '0x0a'` |
-| 110 fields against 109 declared columns | Trailing comma on every row | Added a filler column to absorb it |
-| Path not found | Parentheses in filename | Renamed on upload |
-
-**Diagnostic technique worth reusing:** when the row terminator is the suspect, load into a single-column staging table first. If the whole file arrives as one row, the terminator is wrong. This isolates the problem in one query instead of guessing at `BULK INSERT` options.
-
-
-## Azure setup
-
-Blob access uses the SAS-token pattern rather than embedding credentials in queries:
-
-```
-DATABASE SCOPED CREDENTIAL  ← SAS token
-        │
-EXTERNAL DATA SOURCE        ← blob container URL
-        │
-BULK INSERT / OPENROWSET
+```mermaid
+erDiagram
+    dim_date     ||--o{ fact_flight : "FlightDate"
+    dim_carrier  ||--o{ fact_flight : "CarrierID"
+    dim_airport  ||--o{ fact_flight : "OriginAirportID"
+    dim_airport  ||--o{ fact_flight : "DestAirportID"
+    dim_airframe |o--o{ fact_flight : "TailNumber"
 ```
 
-Running on the Azure SQL free offer (100,000 vCore-seconds/month, 32 GB) with auto-pause enabled. Single resource group so teardown is one delete. Data Factory triggers stay disabled between development sessions - ADF bills per activity run and is the main cost risk in this stack.
+### `fact_flight`
 
+**Grain:** one row per scheduled flight.
+
+| Group | Columns |
+|---|---|
+| Keys | `FlightKey`, `FlightDate`, `CarrierID`, `OriginAirportID`, `DestAirportID`, `TailNumber`, `FlightNumber` |
+| Schedule and wheels times | `SchedDepTime`, `SchedArrTime`, `WheelsOffTime`, `WheelsOnTime` (`TIME(0)`) |
+| Measures | `DepDelay`, `ArrDelay`, `TaxiOut`, `TaxiIn`, `AirTime`, `CRSElapsedTime`, `ActualElapsedTime`, `Distance` |
+| Delay attribution | `CarrierDelay`, `WeatherDelay`, `NASDelay`, `SecurityDelay`, `LateAircraftDelay` |
+| Flags | `Cancelled`, `Diverted` |
+| Diversion summary | `DivArrDelay`, `DivAirportLandings`, `DivReachedDest`, `DivActualElapsedTime`, `DivDistance`, `TotalAddGTime`, `LongestAddGTime` |
+
+**Primary key:** `FlightKey`, a deterministic `BIGINT` hash of flight date, carrier, flight number, origin airport, and scheduled departure time. The primary key is nonclustered; the table is clustered on `FlightDate`, which matches how data is loaded, filtered, and deleted (by month).
+
+### Dimensions
+
+| Table | Grain | Key | Notes |
+|---|---|---|---|
+| `dim_date` | Calendar day | `FlightDate` | Built from a date spine covering every date in staging |
+| `dim_carrier` | Carrier | `CarrierID` (DOT ID) | Seeded with merger history (`MergedInto`, `ActiveThrough`); unseen carriers added as inferred members |
+| `dim_airport` | Airport | `AirportID` | IATA code, city, state FIPS, state name |
+| `dim_airframe` | Tail number | `TailNumber` | Lifetime utilisation stats derived from the fact |
+
+---
+
+## Key design decisions
+
+**`AirportID` over `AirportSeqID`.** BTS issues a new `AirportSeqID` whenever an airport's attributes change, which fragments one physical airport into several keys across years and breaks multi-year analysis. `AirportID` is stable for the life of the airport.
+
+**`CarrierID` (DOT ID) over the carrier code.** Two-letter carrier codes get reused across airline history and mergers. The numeric DOT ID uniquely identifies an airline. Merged carriers stay as their own rows with `MergedInto` and `ActiveThrough`, preserving historical accuracy instead of silently collapsing them into the surviving airline.
+
+**Airframes built from BTS itself, not the FAA registry.** Joining to the FAA aircraft registry was investigated and abandoned: the registry is a current snapshot, so tail-number lookups are unreliable against historical flights.
+
+**Deterministic flight key.** An `IDENTITY` key changes on every reload and can't detect duplicates. A hash of the natural key gives every flight the same key on every run, so a duplicate insert fails loudly on the primary key. This caught a real double-load bug during development that would otherwise have silently doubled every count.
+
+**Two-phase dimensions.** Airframe and carrier stats are computed *from* the fact, but the fact's foreign keys need those dimension rows to exist first. The circular dependency is resolved by splitting each into two steps: keys are inserted from staging **before** the fact, and stats are updated from the fact **after** it.
+
+**Inferred members for late-arriving carriers.** BTS flight files contain carrier IDs but not carrier names. Unseen carriers are inserted with a placeholder name instead of failing the load, and are flagged for enrichment.
+
+**Landing table plus view for staging.** Every BTS CSV line ends with a trailing comma, producing an unnamed extra column that ADF can't read with headers on. Files are read headerless into a generic landing table, and a view maps each positional column to its real name. Downstream procedures only ever see the view.
+
+**`SMALLINT` for delays.** BTS writes whole-minute values as `"15.00"`. After verifying that no value has a fractional part, delays are stored as `SMALLINT` (2 bytes vs 5 for `DECIMAL(9,2)`) with no information lost.
+
+**Skip-if-loaded, with an explicit force.** By default, rerunning a month that's already in the fact does nothing. Passing `Force = true` deletes and reloads exactly that month inside a transaction, which is how fixes to transformation logic get applied to existing data.
+
+---
+
+## Data quality handling
+
+| Issue | Handling |
+|---|---|
+| Trailing comma creates an unnamed 110th column | Absorbed by the landing table, excluded by the view |
+| Numbers stored as `"-5.00"` strings | Cast through `DECIMAL` before `SMALLINT`; a direct cast would silently return NULL |
+| `FlightDate` arrives as text | `TRY_CAST` everywhere; unparseable dates are excluded |
+| `'UNKNOW'` tail number sentinel (~4,000 flights) | Converted to NULL in the fact, excluded from `dim_airframe` |
+| Stray header row | Skipped at source; filtered again in the view as a backstop |
+| Duplicate staging loads | Pre-copy truncate on landing; primary key rejects duplicates at the fact |
+| Cancelled flights carry scheduled distance | Excluded from airframe utilisation stats |
+| Midnight recorded as `'2400'` | Currently converts to NULL (known limitation) |
+
+---
+
+## Pipeline guarantees
+
+- **Idempotent:** rerunning any month produces the same end state.
+- **Atomic per step:** every load procedure runs in its own transaction with `XACT_ABORT ON`; a failure rolls back that step completely.
+- **Loud failures:** every `CATCH` block re-raises. Nothing reports success after doing nothing.
+- **Referential integrity:** foreign keys reject orphan rows at load time rather than letting them appear as blanks in reports.
+- **Guarded destruction:** table drops go through a single whitelisted procedure that requires an environment-specific confirmation phrase and refuses to break foreign key dependencies.
+
+---
 
 ## Repository structure
 
 ```
-├── sql/
-│   ├── 00_schemas.sql          staging, warehouse, quarantine
-│   ├── 01_external_source.sql  master key, credential, data source
-│   ├── 02_staging.sql          landing tables
-│   ├── 03_functions.sql        dbo.ToTime
-│   ├── 04_dimensions.sql       dim_airport, dim_date, dim_carrier
-│   └── 05_fact.sql             fact_flight
-├── adf/                        pipeline definitions
-├── powerbi/                    .pbix and semantic model
-└── docs/                       project brief, data dictionary
+README.md
+docs/
+  AZURE.md
+  POWERBI.md
+sql/
+  00_setup_objects.sql
+  ...                      numbered in pipeline order
+analysis/
+  exploratory and data-quality checks
+adf/
+  exported pipeline, dataset, and linked service definitions
+powerbi/
+  report file
+images/
+  screenshots and diagrams
 ```
 
 ---
 
-## Roadmap
+## Running it
 
-- [x] Azure SQL + Blob Storage provisioned, external data source configured
-- [x] Schemas: staging, warehouse, quarantine
-- [x] First monthly load debugged and landed
-- [x] `dim_airport`
-- [x] `dbo.ToTime` conversion function
-- [x] Quarantine table with JSON row retention
-- [x] `fact_flight` — 34 columns, time fields pending conversion
-- [ ] `dim_date`, `dim_carrier` (carrier code reuse across mergers)
-- [ ] Backfill 2003–present
-- [ ] Data Factory pipeline for monthly incremental loads
-- [ ] Power BI semantic model - KPI cards, delay attribution over time, worst-airport ranking, shock timeline
+1. Provision Azure SQL Database, Blob Storage, and Data Factory (see [docs/AZURE.md](docs/AZURE.md)).
+2. Create `dbo.ToTime` and all procedures in `sql/`.
+3. Run `EXEC dbo.usp_setup_objects;` once to build schemas, tables, the staging view, and reference data.
+4. Import the ADF definitions from `adf/` and point the linked services at your resources.
+5. Trigger the `Main` pipeline with `Year` and `Month`.
+6. Open the report in Power BI Desktop and refresh.
 
-## Data notes
+---
 
-Two documented quirks in the source that affect any analysis built on it:
+## Future work
 
-- **Zero-filled nulls.** Delay-cause columns contain `0` for both "this cause contributed nothing" and "no cause breakdown recorded." The two are not distinguishable in the raw file.
-- **Schema drift.** Column sets change across years. Loads are validated per-batch rather than assuming a fixed 109-column shape holds for all of 2003–present.
+See [docs/POWERBI.md](docs/POWERBI.md#future-work) for the full list. Highlights:
+
+- Automated Power BI refresh triggered from ADF
+- Multi-year historical backfill for the 2001 and 2020 shock analysis
+- `MERGE`-based fact upserts and slowly changing dimensions
+- Quarantine routing for rejected rows instead of filtering them out
+
+---
+
+## Author
+
+**Darshil Mistry** · [github.com/thedarshilmistry](https://github.com/thedarshilmistry)

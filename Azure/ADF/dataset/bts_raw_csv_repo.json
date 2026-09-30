@@ -1,0 +1,19 @@
+{
+    "name": "bts_raw_csv_repo",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "AzureBlobStorage1",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "Binary",
+        "typeProperties": {
+            "location": {
+                "type": "AzureBlobStorageLocation",
+                "folderPath": "extracted-zip",
+                "container": "bts-flight-data"
+            }
+        }
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}
